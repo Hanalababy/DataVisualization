@@ -77,7 +77,7 @@ path:hover {
 <script src="https://d3js.org/topojson.v1.min.js"></script>
 <script>
 
-var width = 1500,
+var width = 800,
     height = 1000,
     centered;
 
@@ -85,7 +85,7 @@ var projection = d3.geo.mercator()
   .scale(190000)
   // Center the Map in San Francisco
   .center([-122.43, 37.73])
-  .translate([1000 / 2, height / 2]);
+  .translate([width / 2, height / 2]);
 
 var path = d3.geo.path()
   .projection(projection);
@@ -111,12 +111,12 @@ var legendsvg = svg.append("g")
 	.attr("transform", "translate(" + 0 + "," + (40) + ")");
 
 var labelsvg = svg.append("g")
-  .attr("transform", "translate(" + 220 + "," + (75) + ")");
+  .attr("transform", "translate(" + 110 + "," + (75) + ")");
 
 labelsvg.append('rect')
    .attr('x',-5)
     .attr('y',-15)
-  .attr('width', 250)
+  .attr('width', 300)
   .attr('height', 80)
    .attr('fill-opacity', '0.4')
 .attr('fill', '#fff');
@@ -348,13 +348,13 @@ d3.json("San Francisco ZIP Codes.json?=" + (Math.random() * (100 - 1) + 1), func
 	.attr("y",30);
 	
 	 labelsvg.append("text")
-    .text("Libraries : d3.js(mercator projection)/topojson.js")
+    .text("Libraries/Tools : d3.js(mercator projection)/topojson.js/librsvg")
     .attr("class", "subtitle")
 	.attr("x",0)
 	.attr("y",45);
 	
 	labelsvg.append("text")
-    .text("Tools : librsvg")
+    .text("github : https://github.com/Hanalababy/DataVisualization")
     .attr("class", "subtitle")
 	.attr("x",0)
 	.attr("y",60);
