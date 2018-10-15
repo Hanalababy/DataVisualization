@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+.background {
+  fill: #d1f5f6;
+  pointer-events: all;
+}
+.axis path, .axis tick, .axis line {
+		      fill: none;
+		      stroke: none;
+		  }
+		  text {
+		  		font-family: verdana;
+		      font-size: 7pt;
+		      fill: #293131;
+		}
+		
+		text.axis{
+		text-anchor:middle;
+    font-size: 7pt;
+	font-family: verdana;
+    fill: #293131;
+    }
+    
+    text.title{
+    font-size: 12pt;
+	font-family: verdana;
+    fill: #293131;
+    font-weight: bold;
+}
+
+text.subtitle{
+    font-size: 7pt;
+	font-family: verdana;
+    fill: #293131;
+}
+		
+		text.label{
+		text-anchor:middle;
+    font-size: 8pt;
+	font-family: verdana;
+    fill: #293131;
+    font-weight: bold;
+}
+
+
+		text.sublabel{
+		text-anchor:text-after-edge;
+    font-size: 7pt;
+	font-family: verdana;
+    fill:#293131;
+}
+
+path:hover {
+        fill: orange;
+      }
+      
+      div.tooltip { 
+          position: absolute;     
+          text-align: center;     
+          width: 80px;          
+          height: 14px;         
+          padding: 2px;       
+          font: 12px sans-serif;    
+          background: #fff; 
+          border: 0px;        
+          pointer-events: none;     
+      }
+
+
+</style>
+<body>
+
+<svg></svg>
+<script src="http://d3js.org/colorbrewer.v1.min.js"></script>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/topojson.v1.min.js"></script>
+<script>
+
+var width = 1500,
+    height = 1000,
+    centered;
+
+var projection = d3.geo.mercator()
+  .scale(190000)
+  // Center the Map in San Francisco
+  .center([-122.43, 37.73])
+  .translate([1000 / 2, height / 2]);
+
+var path = d3.geo.path()
+  .projection(projection);
+
+// Set svg width & height
+var svg = d3.select('svg')
+.attr('class', 'background')
+  .attr('width', width)
+  .attr('height', height);
+
+// Add background
+svg.append('rect')
+  .attr('width', width)
+  .attr('height', height);
+
+var g = svg.append('g');
+
+var mapLayer = g.append('g')
+  .classed('map-layer', true);
+  
+var legendsvg = svg.append("g")
+	//.attr("class", "legendWrapper")
+	.attr("transform", "translate(" + 0 + "," + (40) + ")");
+
+var labelsvg = svg.append("g")
+  .attr("transform", "translate(" + 220 + "," + (75) + ")");
+
+labelsvg.append('rect')
+   .attr('x',-5)
+    .attr('y',-15)
+  .attr('width', 250)
+  .attr('height', 80)
+   .attr('fill-opacity', '0.4')
+.attr('fill', '#fff');
+
+
+
+  function getLongitude(d){
+  	return projection([d.properties.longitude, d.properties.latitude])[0];
+  }
+  function getLatitude(d){
+  	return projection([d.properties.longitude, d.properties.latitude])[1];
+  }
+  
+  
+  function toDegreesMinutesAndSeconds(coordinate) {
+    var absolute = Math.abs(coordinate);
+    var degrees = Math.floor(absolute);
+    var minutesNotTruncated = (absolute - degrees) * 60;
+    var minutes = Math.floor(minutesNotTruncated);
+    var seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+
+    return degrees + "°" + minutes + "'" ;//+ seconds + "\"";
+}
+
+function getLatDMS(lat){
+ var latitude = toDegreesMinutesAndSeconds(lat);
+    var latitudeCardinal = Math.sign(lat) >= 0 ? "N" : "S";
+    return latitude + " " + latitudeCardinal;
+}
+
+function getLngDMS(lng){
+var longitude = toDegreesMinutesAndSeconds(lng);
+    var longitudeCardinal = Math.sign(lng) >= 0 ? "E" : "W";
+    return longitude + " " + longitudeCardinal;
+}
+
+
+function convertDMS(lat, lng) {
+    var latitude = toDegreesMinutesAndSeconds(lat);
+    var latitudeCardinal = Math.sign(lat) >= 0 ? "N" : "S";
+
+    var longitude = toDegreesMinutesAndSeconds(lng);
+    var longitudeCardinal = Math.sign(lng) >= 0 ? "E" : "W";
+
+    return latitude + " " + latitudeCardinal + "\n" + longitude + " " + longitudeCardinal;
+}
+  
+  
+  
+  
+// Load map data
+// https://data.sfgov.org/Geographic-Locations-and-Boundaries/San-Francisco-ZIP-Codes/srq6-hmpi
+d3.json("San Francisco ZIP Codes.json?=" + (Math.random() * (100 - 1) + 1), function(error, mapData) {
+
+	
+	var tooltip = d3.select("body").append("div") 
+        .attr("class", "tooltip")       
+        .style("opacity", 0);
+
+	
+	
+	//plot grid 
+	
+	var latituteMin = -122.52;
+	var LatituteMax = -122.34;
+	
+	var longtitueMin = 37.72;
+	var longtitueMax = 37.84;
+	
+	for(var lat = latituteMin;lat<=LatituteMax;lat+=1/60){
+	
+	legendsvg
+     .append("line")
+ .attr("x1", projection([lat, longtitueMax])[0])
+ .attr("y1", projection([lat, longtitueMax])[1] -20)
+ .attr("x2", projection([lat, longtitueMin])[0] )
+ .attr("y2", projection([lat, longtitueMin])[1] + 20)
+ .style("fill", "grey")
+ .style("stroke", "grey")
+ .style("stroke-dasharray", "2")
+ .style("stroke-width", "1");
+ 
+ legendsvg
+     .append("text")
+     .text(getLngDMS(lat))
+    .attr("class", "axis")
+	.attr("x",projection([lat, longtitueMax])[0])
+	.attr("y",projection([lat, longtitueMax])[1]-30);
+	}
+	
+	
+	for(var lon = longtitueMin;lon<=longtitueMax;lon+=1/60){
+	legendsvg
+     .append("line")
+ .attr("x1", projection([latituteMin, lon])[0] - 20)
+ .attr("y1", projection([latituteMin, lon])[1])
+ .attr("x2", projection([LatituteMax, lon])[0] + 20)
+ .attr("y2", projection([LatituteMax, lon])[1])
+ .style("fill", "grey")
+ .style("stroke", "grey")
+ .style("stroke-dasharray", "2")
+ .style("stroke-width", "1");
+ 
+ legendsvg
+     .append("text")
+     .text(getLatDMS(lon))
+    .attr("class", "axis")
+	.attr("x",projection([latituteMin, lon])[0]- 45)
+	.attr("y",projection([latituteMin, lon])[1] + 2);
+	}
+	
+	
+	var outlines = topojson.feature(mapData, mapData.objects.zipCodes).features;
+	
+ mapLayer.append('path').datum(topojson.mesh(mapData, mapData.objects.zipCodes, function(a, b) {
+    return a == b;
+  }))
+         .attr('d', path)
+         .style('fille', 'orange')
+         .style('stroke', 'orange')
+         .style('stroke-width', '1px');
+
+	
+	mapLayer.selectAll('path')
+      .data(outlines)
+    .enter().append('path')
+      .attr('d', path)
+      .attr('stroke', 'orange')
+       .style("stroke-width", "0.3")
+        .on("mouseover", function(d) {    
+            tooltip.transition()    
+            .duration(200)    
+            .style("opacity", .9);    
+            tooltip.html(
+            	getLatDMS(d.properties.latitude)
+            	// + getLngDMS(d.properties.longtitude)
+            )  
+            .style("left", (d3.event.pageX + 10) + "px")   
+            .style("top", (d3.event.pageY - 10) + "px");  
+          })          
+          .on("mouseout", function(d) {   
+            tooltip.transition()    
+            .duration(500)    
+            .style("opacity", 0); 
+          });
+      
+	mapLayer.append('g').selectAll('circle')
+     .data(outlines)
+     .enter()
+     .append("circle")
+ .attr("cx", function (d) {
+   return projection([d.properties.longitude, d.properties.latitude])[0];
+ })
+ .attr("cy", function (d) {
+   return projection([d.properties.longitude, d.properties.latitude])[1];
+ })
+ .attr("r", "2px")
+ .style("fill", "red")
+ .style("stroke", "red")
+ .style("stroke-width", "2");
+ 
+ mapLayer.append('g').selectAll('text')
+     .data(outlines)
+     .enter()
+ .append("text") // append text
+     //.attr("class", "zip-code")
+       .attr("x", function(d) {
+      if(d.properties.id == "94104"){
+                return projection([d.properties.longitude, d.properties.latitude])[0] + 87;
+               }
+               return projection([d.properties.longitude, d.properties.latitude])[0] + 25;
+       })
+       .attr("y", function(d) {
+               return projection([d.properties.longitude, d.properties.latitude])[1] - 3;
+       })
+      .attr("text-anchor", "text-after-edge") 
+       .attr("class", "label")
+      .text(function(d) {
+               return d.properties.id ;
+  		});
+  		
+  		mapLayer.append('g').selectAll('text')
+     .data(outlines)
+     .enter()
+ .append("text") // append text
+     //.attr("class", "zip-code")
+     .attr("class", "sublabel")
+       .attr("x", function(d) {
+               if(d.properties.id == "94104"){
+               svg.append("line")
+               .attr("x1",projection([d.properties.longitude, d.properties.latitude])[0] + 10)
+               .attr("y1",projection([d.properties.longitude, d.properties.latitude])[1] -1)
+               .attr("x2",projection([d.properties.longitude, d.properties.latitude])[0] + 63)
+               .attr("y2",projection([d.properties.longitude, d.properties.latitude])[1] -1)
+               .style("stroke", "red");
+                return projection([d.properties.longitude, d.properties.latitude])[0] + 70;
+               }
+      
+               return projection([d.properties.longitude, d.properties.latitude])[0] + 10;
+       })
+       .attr("y", function(d) {
+               return projection([d.properties.longitude, d.properties.latitude])[1] + 7;
+       })
+      .attr("text-anchor", "text-after-edge") 
+      .text(function(d) {
+              
+               
+      			var neighborhood = d.properties.neighborhood;
+               return neighborhood;
+  		});
+  		
+  		
+  		 labelsvg.append("text")
+    .text("Zip Codes of San Francisco")
+    .attr("class", "title")
+	.attr("x",0)
+	.attr("y",0);
+	
+	 labelsvg.append("text")
+    .text("Data Source : https://data.sfgov.org")
+    .attr("class", "subtitle")
+	.attr("x",0)
+	.attr("y",15);
+	
+	 labelsvg.append("text")
+    .text("Programming Languages : JS/SVG")
+    .attr("class", "subtitle")
+	.attr("x",0)
+	.attr("y",30);
+	
+	 labelsvg.append("text")
+    .text("Libraries : d3.js(mercator projection)/topojson.js")
+    .attr("class", "subtitle")
+	.attr("x",0)
+	.attr("y",45);
+	
+	labelsvg.append("text")
+    .text("Tools : librsvg")
+    .attr("class", "subtitle")
+	.attr("x",0)
+	.attr("y",60);
+  		
+  	
+      
+});
+
+
+</script>
+</body>
