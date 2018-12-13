@@ -5,4 +5,4 @@
 ### 2.open localhost:8000(by default)
 ### 3.every time hit "Random" will generate a new route
 
-![alt text](HW12.png)
+![alt text](example.png)
