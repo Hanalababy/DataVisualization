@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+html, body, #googleMap {
+    width: 100%;
+    height: 100%;
+}
+
+p.small {
+  line-height: 0.7;
+}
+
+</style>
+<body>
+
+<script src="http://d3js.org/colorbrewer.v1.min.js"></script>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/topojson.v1.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPVHX_eC6Cp5TKty2kW20GKmAg0zEnEFI"></script>
+<p class="small">
+<center>
+<font size="5" color="#35435a">Random Walk in Downtown San Francisco</font><br>
+<font size="2"><b>Programming Language/Library : </b> JS/d3/google map api</font><br>
+<font size="2"><b>Algorithm : </b>Given latitude/longitude constrains and numbers of way points, origin/destination/way points are generated randomly. </font><br>
+<font size="2">The route is resulted from calling google map direction api. (https://developers.google.com/maps/documentation/directions/intro)</font><br>
+<font size="2"><b>github : </b> Hanalababy/DataVisualization</font><br>
+
+</center>
+</p>
+
+<a class="test" href="#" data-level="1">Random</a>
+
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script>
+$(function(){ // jQuery DOM ready
+  $('.test').click(function () {
+    $.get('http://localhost:8000/backend', function (data) {
+      console.log('client data:', data);
+       window.location.reload();
+    });
+    return false;
+  });
+});
+</script>
+
+
+<div id="googleMap"></div>
+
+
+<script>
+
+var x = new google.maps.LatLng(37.793048, -122.415397);
+
+function initialize() {
+
+
+
+
+   d3.json('random.geojson?=' + (Math.random() * (100 - 1) + 1), function(error, mapData) {
+
+    var mapProp = {
+        center: x,
+        zoom: 14,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+
+    var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+
+    map.data.addGeoJson(mapData);
+
+    // Set the stroke width, and fill color for each polygon
+        map.data.setStyle({
+          strokeColor: '#35435a',
+          strokeWeight: 4
+        });
+
+var circle = {
+    path: ' M 0, 0 m -2, 0 a 2,2 0 1,0 4,0   a 2,2 0 1,0 -4,0', // 'M -2,0 0,-2 2,0 0,2 z',
+    strokeColor: '#fd6571',
+    fillColor: '#fd6571',
+    fillOpacity: 1,
+    scale: 4
+  };
+
+d3.csv("test.csv", function(data) {
+ var i = 0;
+ data.forEach(function(d) {
+    d.lat = +d.lat;
+    d.lng = +d.lng;
+
+       console.log(d);
+       var marker = new google.maps.Marker({
+          position: d,
+           icon: circle,
+          label: {
+			fontSize: "11px",
+			fontWeight: "bold",
+   		    text: i + "",
+    		color: 'white',
+  		},
+         map: map
+
+
+  });
+
+
+        i++;
+
+
+  });
+
+
+  });
+
+});
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+
+</script>
+
+</body>
