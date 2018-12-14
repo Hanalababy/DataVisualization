@@ -88,8 +88,6 @@ d3.csv("test.csv", function(data) {
  data.forEach(function(d) {
     d.lat = +d.lat;
     d.lng = +d.lng;
-
-       console.log(d);
        var marker = new google.maps.Marker({
           position: d,
            icon: circle,
